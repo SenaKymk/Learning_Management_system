@@ -1,0 +1,9 @@
+export { default as authRouter } from "../modules/auth/auth.routes";
+export { default as adminRouter } from "../modules/admin/admin.routes";
+export { default as usersRouter } from "../modules/users/users.routes";
+export { default as coursesRouter } from "../modules/courses/courses.routes";
+export { default as examsRouter } from "../modules/exams/exams.routes";
+export { default as filesRouter } from "../modules/files/files.routes";
+export { default as omrRouter } from "../modules/omr/omr.routes";
+export { default as sebRouter } from "../modules/seb/seb.routes";
+export { default as meRouter } from "./me.routes";

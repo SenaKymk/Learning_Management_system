@@ -1,0 +1,25 @@
+{
+  "name": "lms-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/main/main.js",
+  "scripts": {
+    "build:main": "tsc -p main",
+    "build:preload": "tsc -p preload",
+    "build:renderer": "tsc -p renderer && node scripts/copyRendererAssets.js",
+    "build": "npm run build:main && npm run build:preload && npm run build:renderer",
+    "start": "npm run build && electron .",
+    "dev": "npm run build && electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "electron": "30.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.12",
+    "@types/electron": "1.6.10",
+    "electron-builder": "24.13.3",
+    "typescript": "5.6.3"
+  }
+}

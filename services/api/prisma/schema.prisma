@@ -1,0 +1,227 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  INSTRUCTOR
+  STUDENT
+}
+
+enum ContentType {
+  TEXT
+  LINK
+  FILE
+  PDF
+  VIDEO
+}
+
+enum EnrollmentStatus {
+  PENDING
+  ENROLLED
+  REJECTED
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  firstName    String    @default("")
+  lastName     String    @default("")
+  studentNumber String?
+  role         Role      @default(STUDENT)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  courses      Course[]  @relation("UserCourses")
+  attempts     Attempt[]
+  enrollments  Enrollment[]
+  grades       Grade[]
+  examResults  ExamResult[]
+}
+
+model Course {
+  id            String   @id @default(uuid())
+  title         String
+  description   String?
+  materialKey   String?
+  availableFrom DateTime?
+  availableUntil DateTime?
+  createdAt     DateTime @default(now())
+
+  createdById   String
+  createdBy     User     @relation("UserCourses", fields: [createdById], references: [id])
+  prerequisiteId String?
+  prerequisite   Course? @relation("CoursePrerequisite", fields: [prerequisiteId], references: [id])
+  dependents     Course[] @relation("CoursePrerequisite")
+
+  modules       Module[]
+  exams         Exam[]
+  enrollments   Enrollment[]
+  grades        Grade[]
+  examResults   ExamResult[]
+  questionBank  QuestionBank[]
+
+  @@index([createdById])
+  @@index([prerequisiteId])
+}
+
+
+model Module {
+  id       String   @id @default(uuid())
+  title    String
+  order    Int
+  courseId String
+  course   Course   @relation(fields: [courseId], references: [id])
+
+  contents Content[]
+  questionBank QuestionBank[]
+
+  @@index([courseId])
+  @@unique([courseId, order])
+}
+
+model Content {
+  id        String      @id @default(uuid())
+  title     String
+  type      ContentType
+  text      String?
+  url       String?
+  objectKey String?
+  createdAt DateTime    @default(now())
+
+  moduleId  String
+  module    Module      @relation(fields: [moduleId], references: [id])
+
+  @@index([moduleId])
+}
+
+model Exam {
+  id        String     @id @default(uuid())
+  title     String
+  createdAt DateTime   @default(now())
+
+  courseId  String
+  course    Course     @relation(fields: [courseId], references: [id])
+
+  questions Question[]
+  attempts  Attempt[]
+
+  @@index([courseId])
+}
+
+model Question {
+  id           String @id @default(uuid())
+  examId       String
+  exam         Exam   @relation(fields: [examId], references: [id])
+
+  text         String
+  choices      Json
+  correctIndex Int
+  points       Int    @default(1)
+
+  @@index([examId])
+}
+
+model Attempt {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  examId    String
+  exam      Exam     @relation(fields: [examId], references: [id])
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  answers   Json
+  score     Int
+
+  @@index([examId])
+  @@index([userId])
+}
+
+model Enrollment {
+  id        String            @id @default(uuid())
+  userId    String
+  courseId  String
+  status    EnrollmentStatus  @default(PENDING)
+  createdAt DateTime          @default(now())
+
+  user      User              @relation(fields: [userId], references: [id])
+  course    Course            @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([userId])
+}
+
+model Grade {
+  id        String   @id @default(uuid())
+  userId    String
+  courseId  String
+  score     Float?
+  source    GradeSource @default(MANUAL)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  course    Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([userId])
+}
+
+enum GradeSource {
+  MANUAL
+  OMR
+  EXAM
+}
+
+model ExamResult {
+  id              String  @id @default(uuid())
+  userId          String
+  courseId        String
+  score           Float?
+  source          ExamResultSource?
+  rawData         Json?
+  calculatedScore Float?
+
+  user            User    @relation(fields: [userId], references: [id])
+  course          Course  @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([userId])
+}
+
+enum ExamResultSource {
+  OMR
+  MCQ
+}
+
+enum QuestionSource {
+  PDF
+  MANUAL
+}
+
+model QuestionBank {
+  id        String   @id @default(uuid())
+  courseId  String
+  moduleId  String?
+  text      String
+  options   Json
+  answer    Int
+  source    QuestionSource
+  createdAt DateTime @default(now())
+
+  course    Course   @relation(fields: [courseId], references: [id])
+  module    Module?  @relation(fields: [moduleId], references: [id])
+
+  @@index([courseId])
+  @@index([moduleId])
+}

@@ -1,0 +1,23 @@
+{
+  "appId": "com.lms.desktop",
+  "productName": "LMS Desktop",
+  "directories": {
+    "output": "dist/release"
+  },
+  "files": [
+    "dist/**/*",
+    "package.json"
+  ],
+  "asar": true,
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": [
+          "x64",
+          "arm64"
+        ]
+      }
+    ]
+  }
+}
